@@ -31,15 +31,18 @@ pipeline {
             }
         }
         
-        stage('Package & Build Docker Image') {
+        stage('Package') {
             agent {
-                docker {
-                    image 'maven:3.9.6-eclipse-temurin-17'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
+                docker { image 'maven:3.9.6-eclipse-temurin-17' }
             }
             steps {
                 sh 'mvn package -DskipTests -Dcheckstyle.skip=true'
+            }
+        }
+        
+        stage('Build Docker Image') {
+            agent none
+            steps {
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
             }
