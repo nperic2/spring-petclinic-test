@@ -6,20 +6,21 @@ pipeline {
         IMAGE_TAG  = "${env.BUILD_NUMBER}"
     }
 
-    tools {
-        maven 'Maven-3.9'   // must match name configured in Jenkins
-        jdk   'JDK-17'      // must match name configured in Jenkins
-    }
-
     stages {
 
         stage('Compile') {
+            agent {
+                docker { image 'maven:3.9.6-eclipse-temurin-17' }
+            }
             steps {
                 sh 'mvn clean compile -U'
             }
         }
 
         stage('Test') {
+            agent {
+                docker { image 'maven:3.9.6-eclipse-temurin-17' }
+            }
             steps {
                 sh 'mvn test'
             }
@@ -35,27 +36,6 @@ pipeline {
                 sh 'mvn package -DskipTests'
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
-            }
-        }
-
-        // BONUS: Artifactory stage
-        stage('Publish to Artifactory') {
-            when {
-                expression { return env.ARTIFACTORY_URL != null }
-            }
-            steps {
-                rtMavenDeployer(
-                    id: 'deployer',
-                    serverId: 'artifactory-server',
-                    releaseRepo: 'libs-release-local',
-                    snapshotRepo: 'libs-snapshot-local'
-                )
-                rtMavenRun(
-                    tool: 'Maven-3.9',
-                    pom: 'pom.xml',
-                    goals: 'install',
-                    deployerId: 'deployer'
-                )
             }
         }
     }
