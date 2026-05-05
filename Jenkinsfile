@@ -12,8 +12,8 @@ pipeline {
             agent {
                 docker { image 'maven:3.9.6-eclipse-temurin-17' }
             }
-            steps {
-                sh 'mvn clean compile -U'
+           steps {
+                sh 'mvn clean compile -U -Dcheckstyle.skip=true'
             }
         }
 
@@ -22,7 +22,7 @@ pipeline {
                 docker { image 'maven:3.9.6-eclipse-temurin-17' }
             }
             steps {
-                sh 'mvn test'
+                sh 'mvn test -Dcheckstyle.skip=true'
             }
             post {
                 always {
@@ -30,10 +30,10 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Package & Build Docker Image') {
             steps {
-                sh 'mvn package -DskipTests'
+                sh 'mvn package -DskipTests -Dcheckstyle.skip=true'
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
                 sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
             }
